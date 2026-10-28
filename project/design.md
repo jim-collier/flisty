@@ -40,7 +40,7 @@ Design, requirements, and direction. The active pre-v1.0.0 bug and feature list 
 
 ## Summary
 
-flisty walks one or more folders and prints the paths that pass a set of include and exclude rules. The rules come from command-line options, from a `.shcl` file, or both. The output goes to stdout or to a file.
+flisty walks one or more folders and prints the paths that pass a set of include and exclude rules. The rules come from command-line options or from a `.shcl` file. The output goes to stdout or to a file.
 
 ## Background
 
@@ -73,7 +73,15 @@ flisty answers only that question, and prints a list that other tools can read. 
 
 - `--input-config[=]FILE.shcl` reads nested include and exclude rules, through shclwrap.
 
-- `--output-file[=]FILE` writes the list there. Otherwise it goes to stdout.
+- Rules come from the options or from the rule file, never both. That's an error, so there's no question of which comes first.
+
+- `--output-file[=]FILE` writes the list there. Otherwise it goes to stdout. The file name is required.
+
+- The output file is left out of the list when it's inside a walked folder. `--include-output-file` keeps it.
+
+- Paths print as given. An absolute start folder gives absolute paths, and a relative one gives relative paths.
+
+- Anything the rules match is listed: files, folders, and links. `--no-folders` and `--no-links` leave those out.
 
 ### Version 2
 
@@ -114,7 +122,7 @@ From x9incexc's `notes.txt`. All of this needs more detail before it's built.
 
 ### Data flow
 
-1. The options and the rule file become one ordered list of rules.
+1. The options, or the rule file, become one ordered list of rules.
 
 2. The walk visits each folder in turn and hands each path to the rules.
 
@@ -160,7 +168,7 @@ iname: *.jpg
 
 - shcl merges 2 siblings with the same name and value into one, and reports it as H002. In a rule list that moves the second one to where the first was, and the result can change. flisty refuses a rule file with an H002.
 
-- Where `--input-config` sits among the other options is where its rules go in the pipeline.
+- A rule file can also set `no-folders`, `no-links`, and `include-output-file`. Setting one of those in both places is an error, the same as rules in both places.
 
 ## Direction decisions
 
@@ -169,6 +177,8 @@ iname: *.jpg
 - regexp2 was chosen over Go's `regexp` for lookaround and backreferences. It's slower and has no linear-time guarantee, so every match has a time limit.
 
 - A hand-written option parser was chosen over go-arg, go-flags, cobra, and docopt. link-doctor's parser already handles prefix abbreviations and repeated options in order, which the libraries don't do well.
+
+- Rules come from one place only. Mixing options and a rule file would need a rule for which goes first, and either answer surprises someone.
 
 - shcl was chosen for the rule file over YAML and TOML. It's the format the sister projects use for config, and its nesting fits nested rules.
 
@@ -182,13 +192,7 @@ iname: *.jpg
 
 ## Need to work out ambiguities
 
-- Does a bare `--output-file`, with no file name, mean a default name?
-
-- Are paths printed relative to the start folder, or as given?
-
-- Are folders and links listed too, or only files?
-
-- Does the output file, when it's inside a walked folder, leave itself out of the list?
+- Should Windows paths print with forward slashes? Version 2's notes want them in rules.
 
 ## References
 

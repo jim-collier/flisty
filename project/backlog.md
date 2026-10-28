@@ -59,7 +59,7 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- Progress log:
 		- In place. Still needs a run killed partway, then a second run, to show nothing piles up.
 
-- Build the walk: list the files under the given folders
+- Build the walk: list the paths under the given folders
 	- ID: 2026102814515703
 	- Type: Feature
 	- Status: Queued
@@ -97,7 +97,8 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- Requirements:
 		- Read through shclwrap.
 		- The same rule names as the options. A nested rule applies only to what its parent matched.
-		- The file's rules go in the pipeline where `--input-config` sits among the options.
+		- Rules come from the options or from the file, never both. Both is an error.
+		- The file can also set `no-folders`, `no-links`, and `include-output-file`. One set in both places is an error.
 		- A rule file where shcl merged 2 siblings (H002) is refused, with the line numbers.
 	- Note: design.md has the format and the nesting rules.
 
@@ -110,10 +111,9 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- Opened by: JC
 	- Requirements:
 		- Writes the list there in place of stdout.
+		- The file name is required. A bare `--output-file` is an error.
 		- Written to a temp file beside it and renamed at the end, so a failed run leaves the old file whole.
-	- Need to work out ambiguities:
-		- Does a bare `--output-file` mean a default name?
-		- Does the output file leave itself out when it's inside a walked folder?
+		- The output file leaves itself out of the list. `--include-output-file` keeps it.
 
 - Add shclwrap as a dependency that builds from a fresh clone
 	- ID: 2026102814515707
@@ -213,26 +213,28 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- Requirements:
 		- 0 for a clean run, 1 when a folder couldn't be read, 2 for a bad command line or rule file.
 
-- Decide how paths are printed
+- Print paths as given
 	- ID: 2026102814515716
 	- Type: Feature
 	- Status: Queued
 	- Priority: Avg
 	- Opened: 20261028-145157
 	- Opened by: JC
+	- Requirements:
+		- An absolute start folder gives absolute paths, and a relative one gives relative paths.
 	- Need to work out ambiguities:
-		- Relative to the start folder, or as given?
 		- Forward slashes on Windows too? Version 2's notes want them in rules.
 
-- Choose what kinds of entries are listed
+- List files, folders, and links, with options to leave some out
 	- ID: 2026102814515717
 	- Type: Feature
 	- Status: Queued
 	- Priority: Avg
 	- Opened: 20261028-145157
 	- Opened by: JC
-	- Needs more thought:
-		- Files only, or folders and also links, maybe with a `--type` option as in `find`.
+	- Requirements:
+		- Anything the rules match is listed.
+		- `--no-folders` and `--no-links`, and the same in a rule file.
 
 - Test on Windows, macOS, and FreeBSD
 	- ID: 2026102814515718
