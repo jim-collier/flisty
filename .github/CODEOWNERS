@@ -1,0 +1,2 @@
+# Review gating, with branch protection set to require code owner review. Last match wins.
+/.github/CODEOWNERS  @jim-collier
