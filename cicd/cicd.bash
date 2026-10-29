@@ -291,6 +291,10 @@ fStageLint(){
 	fi
 	"${here}/utility/test-id.bash" --check -q || fDie "test IDs (see above)"
 	fEcho_Clean "test IDs: every test has its own"
+	## Kept with the private project files, so a bare clone skips it.
+	if [[ -x "${root}/../private/hooks/scrub.bash" ]]; then
+		"${root}/../private/hooks/scrub.bash" "${root}" || fDie "content scrub findings"
+	fi
 }
 fUnitTests(){
 	local log="" rc=0
@@ -422,7 +426,7 @@ fCpuPlan
 fEcho_Clean "Container ...........: none yet, everything runs on this box"
 if ((doSync)); then fEcho_Clean "Remote sync .........: fast-forward from origin first"
 else fEcho_Clean "Remote sync .........: $(fOffWhy sync)"; fi
-if ((doLint)); then fEcho_Clean "Lint ................: gofmt + go vet, shellcheck on ${#shellFiles[@]} shell file(s), test IDs  (+ staticcheck, golangci-lint, markdownlint if available)"
+if ((doLint)); then fEcho_Clean "Lint ................: gofmt + go vet, shellcheck on ${#shellFiles[@]} shell file(s), test IDs  (+ staticcheck, golangci-lint, markdownlint, content scrub if available)"
 else fEcho_Clean "Lint ................: $(fOffWhy lint)"; fi
 if ((doTest)); then fEcho_Clean "Build + tests .......: ${GO_MODULE_DIR}/${EXE_NAME}, go test -race, ${TEST_CMD[*]}"
 else fEcho_Clean "Build + tests .......: $(fOffWhy test)"; fi
