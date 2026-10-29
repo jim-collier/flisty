@@ -31,6 +31,7 @@ Design, requirements, and direction. The active pre-v1.0.0 bug and feature list 
 - [Rule pipeline](#rule-pipeline)
 	- [Nested rules](#nested-rules)
 - [Rule files](#rule-files)
+	- [Indentation](#indentation)
 - [Direction decisions](#direction-decisions)
 - [Testing](#testing)
 - [Need to work out ambiguities](#need-to-work-out-ambiguities)
@@ -40,7 +41,7 @@ Design, requirements, and direction. The active pre-v1.0.0 bug and feature list 
 
 ## Summary
 
-flisty walks one or more folders and prints the paths that pass a set of include and exclude rules. The rules come from command-line options or from a `.shcl` file. The output goes to stdout or to a file.
+flisty walks one or more folders and prints the paths that pass a set of include and exclude rules. The rules come from command-line options or from a rule file. The output goes to stdout or to a file.
 
 ## Background
 
@@ -71,7 +72,7 @@ flisty answers only that question, and prints a list that other tools can read. 
 	- `--name`, `--iname`, `--wholename`, and `--iwholename` globs, as in `find`.
 	- `--max-depth`, `--no-cross-device`, and `--follow-links`.
 
-- `--input-config[=]FILE.shcl` reads nested include and exclude rules, through shclwrap.
+- `--input-config[=]FILE` reads nested include and exclude rules from a rule file.
 
 - Rules come from the options or from the rule file, never both. That's an error, so there's no question of which comes first.
 
@@ -109,7 +110,7 @@ From x9incexc's `notes.txt`. All of this needs more detail before it's built.
 
 - `github.com/dlclark/regexp2` for regex, for lookaround and backreferences.
 
-- shclwrap for the rule file, over shcl 3.0.
+- A small parser of its own for the rule file.
 
 ### Folder structure
 
@@ -152,23 +153,46 @@ Paths the parent didn't match never see the nested rules.
 
 ## Rule files
 
-A rule file is shcl. Field names are the long option names, and nesting is by indent:
+A rule file has one rule per line. The name is the long option name, then a colon, then the value. Nesting is by indent:
 
 ~~~text
-include: `/home/[^/]+/`
-	exclude: `/\.cache/`
-		include: `/\.cache/keep-me/`
-exclude: `\.tmp$`
+include: /home/[^/]+/
+	exclude: /\.cache/
+		include: /\.cache/keep-me/
+exclude: \.tmp$
 iname: *.jpg
+no-links
 ~~~
 
-- Regexes go in backticks. shcl never decodes a backtick value, and a `#` in one isn't read as a comment.
+- The value is the rest of the line after the colon, with the spaces around it trimmed. Nothing in it is quoted or escaped, so a regex is written as it is.
 
-- shcl gives each kind of field separately, so flisty puts them back in file order by line number.
+- A line whose first character after the indent is `#` is a comment. There are no comments at the end of a line, since `#` can be part of a regex.
 
-- shcl merges 2 siblings with the same name and value into one, and reports it as H002. In a rule list that moves the second one to where the first was, and the result can change. flisty refuses a rule file with an H002.
+- Blank lines and comment lines don't count for indent.
 
-- A rule file can also set `no-folders`, `no-links`, and `include-output-file`. Setting one of those in both places is an error, the same as rules in both places.
+- An on/off setting is its bare name, like `no-links`. The settings are `no-folders`, `no-links`, and `include-output-file`, and they go at the top level only. Setting one in both the file and the options is an error, the same as rules in both places.
+
+- An unknown name, a rule with no value, or a value on a setting is an error, with its line number.
+
+- The file is UTF-8. A byte order mark and CRLF line ends are accepted.
+
+### Indentation
+
+- Tabs or spaces, but not both. A file that uses both anywhere in its indents is an error.
+
+- The step doesn't have to be even. A line indented more than the one above it is that line's child, by any amount.
+
+- A line indented less goes back to the open level with exactly that indent. If no open level has it, the line falls between two levels and could belong to either, so it's an error.
+
+- The first rule sets the top level. A line left of it is an error.
+
+~~~text
+include: a
+    exclude: b
+            include: c      <- child of b, an uneven step is fine
+    exclude: d              <- back to b's level
+  include: e                <- error, between the top level and b's
+~~~
 
 ## Direction decisions
 
@@ -180,7 +204,7 @@ iname: *.jpg
 
 - Rules come from one place only. Mixing options and a rule file would need a rule for which goes first, and either answer surprises someone.
 
-- shcl was chosen for the rule file over YAML and TOML. It's the format the sister projects use for config, and its nesting fits nested rules.
+- The rule file has its own small format rather than shcl, YAML, or TOML. A rule list is order that matters, with repeats. shcl merges 2 siblings with the same name and value, and hands back each kind of field on its own, so the order had to be rebuilt by line number. Regexes also had to go in backticks. A line format with indent for nesting has none of those problems, and is easy to parse.
 
 ## Testing
 
@@ -199,5 +223,3 @@ iname: *.jpg
 - link-doctor, for the filter options and engine.
 
 - x9incexc's `notes.txt`, for the version 2 rule language.
-
-- shcl and shclwrap, for the rule file.

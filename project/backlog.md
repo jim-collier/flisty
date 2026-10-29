@@ -87,7 +87,7 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- Progress log:
 		- The filter engine and its tests came over from link-doctor.
 
-- Read nested rules from `--input-config[=]FILE.shcl`
+- Read nested rules from `--input-config[=]FILE`
 	- ID: 2026102814515705
 	- Type: Feature
 	- Status: Queued
@@ -95,11 +95,12 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- Opened: 20261028-145157
 	- Opened by: JC
 	- Requirements:
-		- Read through shclwrap.
+		- A small parser of our own, not shcl.
+		- Tabs or spaces for indent, but not both. Uneven steps are fine. A line that falls between 2 open levels is an error.
 		- The same rule names as the options. A nested rule applies only to what its parent matched.
 		- Rules come from the options or from the file, never both. Both is an error.
 		- The file can also set `no-folders`, `no-links`, and `include-output-file`. One set in both places is an error.
-		- A rule file where shcl merged 2 siblings (H002) is refused, with the line numbers.
+		- Every error names the line. A fuzz target covers the parser.
 	- Note: design.md has the format and the nesting rules.
 
 - Add `--output-file[=]FILE`
@@ -114,29 +115,6 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 		- The file name is required. A bare `--output-file` is an error.
 		- Written to a temp file beside it and renamed at the end, so a failed run leaves the old file whole.
 		- The output file leaves itself out of the list. `--include-output-file` keeps it.
-
-- Add shclwrap as a dependency that builds from a fresh clone
-	- ID: 2026102814515707
-	- Type: Task
-	- Status: Queued
-	- Priority: High
-	- Opened: 20261028-145157
-	- Opened by: JC
-	- Requirements:
-		- `go mod download` works with nothing from the sister folders.
-		- No `replace` line pointing at a local path.
-
-- File as shcl friction: same name and value siblings merge
-	- ID: 2026102814515708
-	- Type: Task
-	- Status: Queued
-	- Priority: High
-	- Opened: 20261028-145157
-	- Opened by: JC
-	- Requirements:
-		- Report to shcl. Smallest case: `include: a`, `exclude: b`, `include: a` at one level. The third line merges into the first, with only an H002 diagnostic.
-		- A silent wrong answer for any program where sibling order matters.
-		- Needs a way to keep repeated siblings apart, or to read every field of a level in file order.
 
 - CICD reset: containers
 	- ID: 2026102814515709
@@ -182,6 +160,19 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- Requirements:
 		- A sweeping override of the 2026-10-24 CICD reset. It supersedes any earlier decision that conflicts with it.
 		- Every Done item names its test, or says why it has none.
+
+- File as shcl friction: same name and value siblings merge
+	- ID: 2026102814515708
+	- Type: Task
+	- Status: Queued
+	- Priority: Avg
+	- Opened: 20261028-145157
+	- Opened by: JC
+	- Requirements:
+		- Report to shcl. Smallest case: `include: a`, `exclude: b`, `include: a` at one level. The third line merges into the first, with only an H002 diagnostic.
+		- A silent wrong answer for any program where sibling order matters.
+		- Needs a way to keep repeated siblings apart, or to read every field of a level in file order.
+	- Note: flisty no longer uses shcl for rules. The report still stands.
 
 - Add `-0`/`--print0` output
 	- ID: 2026102814515713
@@ -409,7 +400,7 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- Requirements:
 		- Short names for rules, such as `incl` for `include`.
 		- Booleans as `y`, `yes`, `t`, `true`, `1`, or `on`, and their opposites. Empty or `null` is off.
-	- Note: Check what shcl already accepts for booleans first.
+	- Note: Version 1 takes a bare name for an on/off setting.
 
 - Version 2: path and regex clean-up
 	- ID: 2026102814515733
@@ -475,6 +466,17 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- Test case: dbsj2, debe5, dej9t, dej9x.
 	- Acceptance signoff: Self-closed: its tests pass.
 	- Closed: 20261028-145157
+
+- Add shclwrap as a dependency that builds from a fresh clone
+	- ID: 2026102814515707
+	- Type: Task
+	- Status: Moot
+	- Opened: 20261028-145157
+	- Opened by: JC
+	- Requirements:
+		- `go mod download` works with nothing from the sister folders.
+		- No `replace` line pointing at a local path.
+	- Note: The rule file has its own parser now.
 
 ## Old format
 

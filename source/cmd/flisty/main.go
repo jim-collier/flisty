@@ -1,5 +1,5 @@
 // flisty lists the files under one or more folders that pass a set of include and
-// exclude rules, given as options or in a .shcl file.
+// exclude rules, given as options or in a rule file.
 
 //	Copyright © 2026 Jim Collier [ID: 2უNაɘ«҂թȹɤξπ๙¿ձϖ]
 //	Licensed under the GNU General Public License v2.0 or later. Full text at:

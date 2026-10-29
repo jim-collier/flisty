@@ -46,13 +46,13 @@ Planned for the first release:
 
 - Include, exclude, and re-include rules, by regex or by `find`-style glob, applied in the order given.
 
-- Rule files in [shcl](https://github.com/yottacore/shcl), where a nested rule applies only to what its parent matched:
+- Rule files, where a nested rule applies only to what its parent matched:
 
 	~~~text
-	include: `/home/[^/]+/`
-		exclude: `/\.cache/`
-			include: `/\.cache/keep-me/`
-	exclude: `\.tmp$`
+	include: /home/[^/]+/
+		exclude: /\.cache/
+			include: /\.cache/keep-me/
+	exclude: \.tmp$
 	~~~
 
 - Depth limits, staying on one filesystem, and following symlinks without looping.
