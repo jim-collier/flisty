@@ -25,8 +25,9 @@ flisty is in early development. It builds and prints its version, and the listin
 
 - [Why](#why)
 - [Features](#features)
-- [Installing](#installing)
-- [Building from source](#building-from-source)
+- [Installation](#installation)
+	- [DIY](#diy)
+- [Set up development environment](#set-up-development-environment)
 - [Support](#support)
 - [Copyright and license](#copyright-and-license)
 
@@ -61,20 +62,29 @@ Planned for the first release:
 
 - Linux, macOS, Windows, and FreeBSD.
 
-## Installing
+## Installation
 
-There are no releases yet. Build from source for now.
+There are no releases yet. Packages and install scripts come with the first one.
 
-## Building from source
+### DIY
 
-Requires Go 1.26.2 or newer.
+Build from source with Go 1.26.2 or newer, then copy `flisty` to a folder on your `PATH`:
 
 ~~~bash
-cd source
+git clone https://github.com/jim-collier/flisty.git
+cd flisty/source
 go build -o flisty ./cmd/flisty
 ~~~
 
-`cicd/cicd.bash` is the full pipeline: lint, tests, fuzzing, and a local install. `cicd/cicd.bash --help` lists its options.
+## Set up development environment
+
+- Go 1.26.2 or newer.
+
+- Bash 4.4 or newer, and shellcheck, for the pipeline scripts.
+
+- Used when found: staticcheck, golangci-lint, govulncheck, and markdownlint-cli. `cicd/config.bash` lists the versions in use.
+
+`cicd/cicd.bash` is the full pipeline: lint, tests, and fuzzing, then a local install and a git commit and push. `cicd/cicd.bash --merge-gate` runs the same checks, without the install, commit, or push. `--help` lists the other options.
 
 ## Support
 

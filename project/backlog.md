@@ -45,19 +45,7 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- Progress log:
 		- The flags are in. `--leakcheck`, `--no-container`, and `--no-remote` are taken but change nothing yet.
 		- Still needs the pre-push hook that runs `--merge-gate` on a push to main, with a list of doc-only paths that skip it.
-
-- CICD reset: temp files and safe removal
-	- ID: 2026102814515702
-	- Type: Task
-	- Status: Started
-	- Priority: Avg
-	- Opened: 20261028-145157
-	- Opened by: JC
-	- Requirements:
-		- A sweeping override of the 2026-10-24 CICD reset. It supersedes any earlier decision that conflicts with it.
-		- Each run's temp folder, removal on exit, stale run sweep, and the removal guard.
-	- Progress log:
-		- In place. Still needs a run killed partway, then a second run, to show nothing piles up.
+		- The hook also runs the content scrub when it's there, as the lint step does now.
 
 - Build the walk: list the paths under the given folders
 	- ID: 2026102814515703
@@ -126,6 +114,7 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- Requirements:
 		- A sweeping override of the 2026-10-24 CICD reset. It supersedes any earlier decision that conflicts with it.
 		- Build and test in a pinned container image, and fall back to the host when docker is missing.
+		- The image pins Go and the lint tools. Today `config.bash` only records their versions and warns when they differ.
 
 - CICD reset: container cleanup
 	- ID: 2026102814515710
@@ -268,6 +257,8 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- Requirements:
 		- A sweeping override of the 2026-10-24 CICD reset. It supersedes any earlier decision that conflicts with it.
 		- GitHub's free arm64 macOS runner builds, tests, and runs the CLI once the repo is public.
+	- Progress log:
+		- The GitHub repo is public since 20261028, so the runner is free now.
 
 - CICD reset: CICD process gaps
 	- ID: 2026102814515722
@@ -279,10 +270,58 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- Requirements:
 		- A sweeping override of the 2026-10-24 CICD reset. It supersedes any earlier decision that conflicts with it.
 		- Leak checks: a soak test, and CodeQL from a pinned CLI.
-		- Cross-builds and dogfood for Windows and macOS.
-		- Release packaging with checksums, and a check that a release rebuilds to the same bytes.
+		- Cross-builds and dogfood for Windows and macOS, and arm64 builds.
+		- A check that a release rebuilds to the same bytes, and a README line once it holds.
 		- Windows icon and version details in the .exe.
-		- Profiling.
+		- Profiling, with a flamegraph and a hotspot report each run.
+		- Dogfood skips the copy when the installed binary is in use.
+		- The regression suite run on its own builds into the plain temp folder, not a run folder.
+	- Note: Release packages moved to their own item, 2026102818015770.
+
+- Build release packages
+	- ID: 2026102818015770
+	- Type: Task
+	- Status: Queued
+	- Priority: Avg
+	- Opened: 20261028-180157
+	- Opened by: JC
+	- Requirements:
+		- Linux, FreeBSD, Windows, and macOS builds, each for x86_64 and arm64. Names say x86_64, not amd64.
+		- `.deb` and `.rpm` for Linux, `.pkg` for FreeBSD, and a single-file Windows installer that updates an installed copy.
+		- The version in every artifact name, in one scheme settled before the first tagged release.
+		- A sha256 checksums file beside them.
+		- Skipped by `--quick`.
+	- Note: goreleaser may fit, if its names match the scheme.
+
+- Write install scripts
+	- ID: 2026102818015807
+	- Type: Feature
+	- Status: Queued
+	- Priority: Avg
+	- Opened: 20261028-180157
+	- Opened by: JC
+	- Prereq IDs: 2026102818015770
+	- Requirements:
+		- `install.bash` for Linux, BSD, macOS, and WSL, on bash 3.2. `install.ps1` for PowerShell 5 and 7, on any OS.
+		- Runs as a one-liner from the README, and gets the latest stable or dev release. It lists releases through the GitHub API, so a prerelease works when there's no stable one.
+		- Detects the OS and CPU, checks the checksum, and is safe to run twice.
+		- Says what it will do and asks first.
+		- Options: release dev or stable, target user or system, yes, help, and version.
+		- README gets the one-liners and the install folders, and points to the help option for the rest.
+
+- Make the demo gif
+	- ID: 2026102818015844
+	- Type: Task
+	- Status: Queued
+	- Priority: Avg
+	- Opened: 20261028-180157
+	- Opened by: JC
+	- Prereq IDs: 2026102814515703, 2026102814515704
+	- Requirements:
+		- A faux terminal gif of the main features, about 20 to 30 seconds, rendered headless by the pipeline. Skipped by `--quick`.
+		- A short plain-text script for it, kept in `cicd/utility/demo/`, that can be edited by hand.
+		- Made-up paths and names only.
+		- Shown at the top of the README.
 
 - Version 2 rule language
 	- ID: 2026102814515723
@@ -415,6 +454,19 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 		- Regex groups become non-capturing, for speed.
 	- Needs more thought: Non-capturing groups break backreferences, which regexp2 was chosen for.
 
+- Dogfood launcher script
+	- ID: 2026102818015881
+	- Type: Task
+	- Status: Queued
+	- Priority: Low
+	- Opened: 20261028-180157
+	- Opened by: JC
+	- Requirements:
+		- A cross-platform `dogfood_flisty.ps1`, with bash and cmd wrappers, as silkterm's launcher does. Masters kept in the repo's `utility/`.
+		- Copies the latest dogfood build into a dated versions folder, links it as the current one, and runs it with the arguments given.
+		- Keeps 5 to 10 versions, up to 1 GB, and never removes one in use.
+	- Needs more thought: flisty is a CLI already on PATH, so a versioned launcher may add little.
+
 - CICD reset: CPU and priority
 	- ID: 2026102814515734
 	- Type: Task
@@ -436,7 +488,7 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- Opened: 20261028-145157
 	- Opened by: JC
 	- Requirements:
-		- A sweeping override of the 2026-10-24 CICD reset. It supersedes any earlier decision that conflicts wiht it.
+		- A sweeping override of the 2026-10-24 CICD reset. It supersedes any earlier decision that conflicts with it.
 	- Test case: n/a, every run prints the step lines.
 	- Acceptance signoff: Self-closed: copied as-is from a sister pipeline.
 	- Closed: 20261028-145157
@@ -453,6 +505,23 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- Test case: the test ID check in the lint step.
 	- Acceptance signoff: Self-closed: mechanical.
 	- Closed: 20261028-145157
+
+- CICD reset: temp files and safe removal
+	- ID: 2026102814515702
+	- Type: Task
+	- Status: Done
+	- Priority: Avg
+	- Opened: 20261028-145157
+	- Opened by: JC
+	- Requirements:
+		- A sweeping override of the 2026-10-24 CICD reset. It supersedes any earlier decision that conflicts with it.
+		- Each run's temp folder, removal on exit, stale run sweep, and the removal guard.
+	- Progress log:
+		- In place. Still needs a run killed partway, then a second run, to show nothing piles up.
+	- Verified: Runs stopped partway by Ctrl+C and by TERM each removed their folder and left no processes. The next run swept a dead run's folder older than 2 days, and kept a younger one.
+	- Test case: n/a, it's the pipeline's own cleanup. Every run prints what it removed.
+	- Acceptance signoff: Self-closed: checked, and hard to test by hand.
+	- Closed: 20261028-180530
 
 - CICD reset: version line
 	- ID: 2026102814515737
@@ -492,6 +561,7 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 	- 🔘 Dev-environment install script (Linux bash, macOS sh, Windows PowerShell), runnable via a single `curl`/`wget` and documented under "how to develop". Clones main, installs dependencies, and states what it will do with an option to abort.
 
 	- 🔘 Release-install script per platform, runnable via a single `curl`/`wget` and documented under "how to install". Downloads, installs, and runs the latest release, with an option to abort.
+		- Superseded by ID: 2026102818015807.
 
 - Configuration and persistence
 
@@ -500,6 +570,7 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 			- 🔘 Settings live under `~/.config` (YAML or TOML), resistant to errors (e.g. don't bail on the whole thing due to one bad line).
 				- Note: config files use shcl, not YAML or TOML.
 		- 🔘 Overridden by program options at run-time.
+		- Needs more thought: flisty may not need a user config at all. Rules and settings come from the options or a rule file, never both, per design.md.
 
 ### Done
 
@@ -535,10 +606,12 @@ This is a product backlog just for pre-v1.0.0 release. After that, bugs, feature
 
 	- The ID is the local time to the hundredth of a second. Opened is when it was written down, which may differ. (Use a keyboard macro and possibly something like project 'zuid' to generate.)
 
-	- Status values meaning: Testing means the fix is in and checks are running or still to run. Waiting on signoff means automated testing passed. Moot means something else changed that made it irrelevant. Canceled means it still applies but was decided against. Waiting for testing means the fix is in and waits on a long CI run or an outside test host. Can't reproduce means a real attempt to reproduce it failed.
+	- Status values meaning: Testing means the fix is in and checks are running or still to run. Waiting on signoff means automated testing passed. Moot means something else changed that made it irrelevant. Canceled means it still applies but was decided against. Waiting on automated testing means the fix is in and waits on a test run with no person needed. Waiting on a partial CICD run means it waits on a run of some stages, started by a person or automatically. Waiting on a full CICD run means the same for the whole pipeline, including a remote test host. Waiting on UAT means a person has to try it and judge. Can't reproduce means a real attempt to reproduce it failed.
+
+	- An item waiting on signoff that is hard to test by hand is closed once the fix is sure and a regression test covers it, where one can be written.
 
 	- As issues are worked, and statuses change, place them in correct sorting order within the list:
-		- First by status: Waiting for answers, Waiting on signoff, Testing, Waiting for testing, Can't reproduce, Stalled, Started, Queued, Done, Deferred, Canceled, Moot
+		- First by status: Waiting for answers, Waiting on signoff, Testing, Waiting on automated testing, Waiting on a partial CICD run, Waiting on a full CICD run, Waiting on UAT, Can't reproduce, Stalled, Started, Queued, Done, Deferred, Canceled, Moot
 		- Then by severity|priority: Critical, High, Avg, Low
 		- Then by type: Bugs, [not bugs together]
 
@@ -549,9 +622,10 @@ Template:
 - Title
 	- ID: YYYYmmDDHHMMSSNN
 	- Type: [Bug|Feature|Enhancement|Task]
-	- Status: [Queued|Waiting for answers|Waiting on signoff|Waiting for testing|Started|Testing|Stalled|Can't reproduce|Moot|Canceled|Deferred|Done]
+	- Status: [Queued|Waiting for answers|Waiting on signoff|Waiting on automated testing|Waiting on a partial CICD run|Waiting on a full CICD run|Waiting on UAT|Started|Testing|Stalled|Can't reproduce|Moot|Canceled|Deferred|Done]
 	- Needs local test suite run?:
 	- Needs external testing:
+	- Needs hand testing:
 	- Priority [Feature|Enhancement] | Severity [Bug]: [Critical|High|Avg|Low]
 	- Opened:
 	- Opened by:

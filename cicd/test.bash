@@ -50,10 +50,10 @@ if [[ -z "${exe}" ]]; then
 fi
 [[ -x "${exe}" ]] || { echo "test: not executable: ${exe}" >&2; exit 1; }
 
-fAssertRun "[dej9x] --version names the program and its version" 0 "flisty v" --version
-fAssertRun "[dej9y] --help prints usage" 0 "Usage:" --help
-fAssertRun "[dej9z] -h prints usage" 0 "Usage:" -h
-fAssertRun "[deja0] an unbuilt request exits 2" 2 "" some-folder
+fAssertRun "[dej9x] --version line" 0 "flisty v" --version
+fAssertRun "[dej9y] --help" 0 "Usage:" --help
+fAssertRun "[dej9z] -h short form" 0 "Usage:" -h
+fAssertRun "[deja0] folder arg while listing is unbuilt" 2 "" some-folder
 
 printf '\n  %d passed, %d failed\n' "${nPass}" "${nFail}"
 ((nFail == 0))
