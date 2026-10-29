@@ -12,11 +12,11 @@
 </div>
 
 <!-- TOC ignore:true -->
-# flisty
+# Flisty
 
-List the files under a folder that pass your include and exclude rules. Give the rules as options, or in a rule file where nesting narrows a rule to what its parent matched. The list goes to stdout or to a file, ready for a backup, sync, or archive tool to read.
+Problem: Complex selection of files to include for utilities like `rsync`, backup programs, etc. is a mess. Their CLI options are confusing and inconsistent - even with the same program over different versions.
 
-flisty is in early development. It builds and prints its version, and the listing is what's being built now.
+Solution: Flisty does one thing, well: Produces a powerfully-filtered list of files with a powerful but logical and consistent approach, to feed other programs. (Either piped, or as a `--include`-style file that nearly everything supports.)
 
 <!-- TOC ignore:true -->
 ## Table of contents
@@ -25,8 +25,9 @@ flisty is in early development. It builds and prints its version, and the listin
 
 - [Why](#why)
 - [Features](#features)
-- [Installing](#installing)
-- [Building from source](#building-from-source)
+- [Installation](#installation)
+	- [DIY](#diy)
+- [Set up development environment](#set-up-development-environment)
 - [Support](#support)
 - [Copyright and license](#copyright-and-license)
 
@@ -34,47 +35,67 @@ flisty is in early development. It builds and prints its version, and the listin
 
 ## Why
 
-Most backup and sync jobs start with the same question: which files? Skip the trash and the cache, keep the photos, but keep this one folder inside the cache. `find` can answer it, but past a few rules its syntax is hard to read and harder to change. And every backup tool has its own rule format.
+Most backup and sync jobs start with the same question: which files? Skip the trash and the cache, keep the photos, but keep this one folder inside the cache. `find` works for small or simple jobs, but past a few rules its syntax is hard to read and harder to change. And every backup tool has its own rule format.
 
-flisty answers only that question. Its rules read top to bottom, one at a time, and the result is a plain list any other tool can use.
+Flisty answers only that question. Its rules read top to bottom, one at a time, and the result is a plain list of files that any other tool can use.
 
-If one or two `find` options do the job, keep using `find`. flisty doesn't copy, sync, or delete anything.
+Flisty doesn't do anything to the list of files.
 
 ## Features
 
-Planned for the first release:
+You have total control over the dynamic generation of the file list, including:
 
-- Include, exclude, and re-include rules, by regex or by `find`-style glob, applied in the order given.
+- Multiple search entry points.
 
-- Rule files in [shcl](https://github.com/yottacore/shcl), where a nested rule applies only to what its parent matched:
+- Excluded file specs can be selectively re-included with narrower criteria (E.g. exclude all '.bak' files, except under '~/my-backups/'.)
 
-	~~~text
-	include: `/home/[^/]+/`
-		exclude: `/\.cache/`
-			include: `/\.cache/keep-me/`
-	exclude: `\.tmp$`
-	~~~
+- Include and/or exclude rules:
+	- Based on any of:
+		- Full regex
+		- '*' style wildcards
+		- Modification time
+		- Size
+		- Type (e.g. file or link)
+		- Follow symlinks, or not
+		- Follow foreign filesystem, or not
+		- Follow nested filesystem (e.g. ZFS, Btrfs), or not
+		- Depth limits
+		- Looping symlink detection
+		- Use apparent or canonical paths
 
-- Depth limits, staying on one filesystem, and following symlinks without looping.
+- You can define your own string variables to avoid repetition, and/or to give complex regex expression meaningful names.
+
+- You can also output a separate excluded list at the same time (e.g. for verification).
+
+- Specify rules on as CLI options, or specify a rules list stored as a file.
 
 - Output to stdout, or to a file with `--output-file`.
 
-- Linux, macOS, Windows, and FreeBSD.
+- Linux, Windows, macOS, and FreeBSD.
 
-## Installing
+## Installation
 
-There are no releases yet. Build from source for now.
+*There are no releases yet. Packages and install scripts come with the first one*.
 
-## Building from source
+### DIY
 
-Requires Go 1.26.2 or newer.
+Build from source with Go 1.26.2 or newer, then copy `flisty` to a folder on your `PATH`:
 
 ~~~bash
-cd source
+git clone https://github.com/jim-collier/flisty.git
+cd flisty/source
 go build -o flisty ./cmd/flisty
 ~~~
 
-`cicd/cicd.bash` is the full pipeline: lint, tests, fuzzing, and a local install. `cicd/cicd.bash --help` lists its options.
+## Set up development environment
+
+- Go 1.26.2 or newer.
+
+- Bash 4.4 or newer, and shellcheck, for the pipeline scripts.
+
+- Used when found: staticcheck, golangci-lint, govulncheck, and markdownlint-cli. `cicd/config.bash` lists the versions in use.
+
+`cicd/cicd.bash` is the full pipeline: lint, tests, and fuzzing, then a local install and a git commit and push. `cicd/cicd.bash --merge-gate` runs the same checks, without the install, commit, or push. `--help` lists the other options.
 
 ## Support
 
@@ -88,4 +109,4 @@ go build -o flisty ./cmd/flisty
 > Licensed under the [GNU General Public License v2.0 or later](https://spdx.org/licenses/GPL-2.0-or-later.html)<br />
 > SPDX-License-Identifier: `GPL-2.0-or-later` <br />
 > No warranty.<br />
-> flisty™ is a [trademark](trademark.md) of Jim Collier.
+> Flisty™ is a [trademark](trademark.md) of Jim Collier.
